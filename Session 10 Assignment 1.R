@@ -1,0 +1,25 @@
+# 1. Read the file in Zip format and get it into R. 
+myfile <- read.xlsx(unzip("C:/Users/Priyanka/Downloads/Compressed/AirQualityUCI.zip"),sheetIndex = 1)
+library(xlsx)
+data = read.xlsx2("AirQualityUCI.xlsx", sheetIndex = 1)
+
+# 2. Create Univariate for all the columns.
+names(data)
+dim(data)
+str(data)
+class(data)
+head(data)
+summary(data)
+
+# 3. Check for missing values in all columns. 
+NotA = is.na(data)
+find(what = "TRUE", mode = "any", numeric = FALSE, simple.words = TRUE)
+#OR
+library(mice)
+md.pattern(data)
+
+# 4. Impute the missing values using appropriate methods. 
+# As the data is not having any Missing Values we do not need to use any imputation methods
+
+# 5. Create bi-variate analysis for all relationships. 
+
