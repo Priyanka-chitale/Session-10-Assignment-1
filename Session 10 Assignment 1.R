@@ -1,25 +1,180 @@
 # 1. Read the file in Zip format and get it into R. 
-myfile <- read.xlsx(unzip("C:/Users/Priyanka/Downloads/Compressed/AirQualityUCI.zip"),sheetIndex = 1)
-library(xlsx)
-data = read.xlsx2("AirQualityUCI.xlsx", sheetIndex = 1)
+url <- paste("https://archive.ics.uci.edu/ml/machine-learning-databases/00360/","AirQualityUCI.zip", sep = '')
+
+# create a temporary directory
+td <- tempdir()
+
+#create a place holder file
+tf <- tempfile(tmpdir = td,fileext = ".zip")
+
+# download the file in place holder file
+download.file(url,tf)
+
+# get the name of the first file in the zip archive
+file_name <-unzip(tf,list = T)$Name
+
+#unzip the file to a temporary directory
+unzip(tf,files = file_name, exdir = td, overwrite = T)
+
+fpath <- file.path(td, file_name[1])
+
+
+aq <- read.csv(fpath, sep = ';', header = T)
+
+str(aq)
 
 # 2. Create Univariate for all the columns.
-names(data)
-dim(data)
-str(data)
-class(data)
-head(data)
-summary(data)
+library(psych)
+library(purrr)
+library(tidyr)
+library(ggplot2)
+
+summary(aq)
+describe(aq)
+
+aq %>% keep(is.numeric)%>% gather() %>% ggplot(aes(x=value))+
+  facet_wrap(~key, scales = "free") +geom_histogram(binwidth = 70,color='purple', alpha=0.6)+theme_bw()
+
 
 # 3. Check for missing values in all columns. 
-NotA = is.na(data)
-find(what = "TRUE", mode = "any", numeric = FALSE, simple.words = TRUE)
-#OR
+summary(aq)
+
+# 4. Impute the missing values using appropriate methods
+
+str(aq)
 library(mice)
-md.pattern(data)
+md.pattern(aq)
 
-# 4. Impute the missing values using appropriate methods. 
-# As the data is not having any Missing Values we do not need to use any imputation methods
+library(VIM)
 
-# 5. Create bi-variate analysis for all relationships. 
+mice_plot <-aggr(aq,col=c('blue','yellow'), numbers=T, sortVars=T, labels=names(aq), cex.axis=.7,gap=3,ylab=c("Missing Data",
+                                                                                                              "Pattern"))
+str(aq)
+#checking PT08.S1.CO. normal or skewed
+df2<-na.omit(aq$PT08.S1.CO.)
+summary(df2)
+hist(df2)     # normal distributed so imputing with mean.
+aq$PT08.S1.CO.<-ifelse(is.na(aq$PT08.S1.CO.),mean(aq$PT08.S1.CO.,na.rm=T),aq$PT08.S1.CO.)
+
+#checking NMHC.GT. normal or skewed
+tail(aq$NMHC.GT.)
+df2_NMHC.GT<-na.omit(aq$NMHC.GT.)
+summary(df2_NMHC.GT)
+hist(df2_NMHC.GT) # normal distributed so imputing with mean.
+aq$NMHC.GT.<-ifelse(is.na(aq$NMHC.GT.),mean(aq$NMHC.GT.,na.rm=T),aq$NMHC.GT.)
+tail(aq$NMHC.GT.)
+
+#checking PT08.S2.NMHC. normal or skewed
+tail(aq$PT08.S2.NMHC.)
+df2_PT08.S2.NMHC<-na.omit(aq$PT08.S2.NMHC.)
+summary(df2_PT08.S2.NMHC)
+hist(df2_PT08.S2.NMHC) # normal distributed so imputing with mean.
+aq$PT08.S2.NMHC.<-ifelse(is.na(aq$PT08.S2.NMHC.),mean(aq$PT08.S2.NMHC.,na.rm=T),aq$PT08.S2.NMHC.)
+tail(aq$NMHC.GT.)
+
+#checking NOx.GT. normal or skewed
+tail(aq$NOx.GT.)
+df2_NOx.GT.<-na.omit(aq$NOx.GT.)
+summary(df2_NOx.GT.)
+hist(df2_NOx.GT.) # SKEWED distributed so imputing with median.
+aq$NOx.GT.<-ifelse(is.na(aq$NOx.GT.),median(aq$NOx.GT.,na.rm=T),aq$NOx.GT.)
+tail(aq$NOx.GT.)
+
+str(aq)
+#checking PT08.S3.NOx. normal or skewed
+tail(aq$PT08.S3.NOx.)
+df2_PT08.S3.NOx.<-na.omit(aq$PT08.S3.NOx.)
+summary(df2_PT08.S3.NOx.)
+hist(df2_PT08.S3.NOx.) # normal distributed so imputing with mean.
+aq$PT08.S3.NOx.<-ifelse(is.na(aq$PT08.S3.NOx.),mean(aq$PT08.S3.NOx.,na.rm=T),aq$PT08.S3.NOx.)
+tail(aq$PT08.S3.NOx.)
+
+str(aq)
+#checking NO2.GT.  normal or skewed
+tail(aq$NO2.GT. )
+df2_NO2.GT. <-na.omit(aq$NO2.GT. )
+summary(df2_NO2.GT. )
+hist(df2_NO2.GT. ) # skewed distributed so imputing with median
+aq$NO2.GT. <-ifelse(is.na(aq$NO2.GT. ),median(aq$NO2.GT. ,na.rm=T),aq$NO2.GT. )
+tail(aq$NO2.GT.)
+
+str(aq)
+#checking PT08.S4.NO2  normal or skewed
+tail(aq$PT08.S4.NO2 )
+df2_PT08.S4.NO2 <-na.omit(aq$PT08.S4.NO2 )
+summary(df2_PT08.S4.NO2 )
+hist(df2_PT08.S4.NO2 ) # skewed distributed so imputing with median
+aq$PT08.S4.NO2 <-ifelse(is.na(aq$PT08.S4.NO2 ),median(aq$PT08.S4.NO2 ,na.rm=T),aq$PT08.S4.NO2)
+tail(aq$PT08.S4.NO2)
+
+str(aq)
+#checking PT08.S5.O3.  normal or skewed
+tail(aq$PT08.S5.O3.)
+df2_PT08.S5.O3. <-na.omit(aq$PT08.S5.O3. )
+summary(df2_PT08.S5.O3.)
+hist(df2_PT08.S5.O3.) # skewed distributed so imputing with median
+aq$PT08.S5.O3. <-ifelse(is.na(aq$PT08.S5.O3. ),median(aq$PT08.S5.O3.,na.rm=T),aq$PT08.S5.O3.)
+tail(aq$PT08.S5.O3.)
+
+# 5. Create bi-variate analysis for all relationships.
+
+library(psych)
+pairs.panels(aq[,c(1,2,3,4,5,6,7,8,9)], methods='spearman', hist.col="yellow",density=T,ellipse=T,lm=T,main='Scatter plot with spearman correlation')
+
+# 6. Test relevant hypothesis for valid relations.
+
+#we do paired test for continous variables
+
+#some of test are as follows
+
+#define the null hypothesis
+#Ho: mu0= mu1
+#Ha: mu0!=mu1
+
+t.test(x=aq$PT08.S1.CO., y=aq$PT08.S2.NMHC. ,alternative = "two.sided",mu=0 ,paired = TRUE)
+
+#as p value of this test is <0.05 we reject the null hypo
+#and accept the alternative hypothesis which says there
+#Mean of 1 variable - Mean of 2 variable is not equal to 0
+#thus this are some test that we performed
+
+# 7. Create cross tabulations with derived variables.
+
+table(aq$PT08.S1.CO.,aq$ PT08.S2.NMHC)
+
+# 8. Check for trends and patterns in time series.
+plot.ts(aq$Date,aq$PT08.S3.NOx.)
+d_decomp=decompose(aq) 
+plot(d_decomp)
+
+
+ts (aq, frequency = 4, start = c(1959, 2)) # frequency 4 => Quarterly Data
+ts (1:10, frequency = 12, start = 1990) # freq 12 => Monthly data.
+
+ts (aq, start=c(2009), end=c(2014), frequency=1) # Yearly Data
+
+ts (1:1000, frequency = 365, start = 1990)# freq 365 => daily data.
+
+tsaq <- EuStockMarkets[, 1] # ts data
+
+decomposed_aq <- decompose(tsaq, type = "multi")
+
+plot(decomposed_aq)
+
+
+# 9. Find out the most polluted time of the day and the name of the chemical compound.
+
+library(dplyr)
+categorical<-select_if(aq,is.numeric)
+str(categorical)
+
+colMax <- function(aq) sapply(aq, max, na.rm = TRUE)
+
+colMax(categorical) # This gives the maximum value of from every column
+
+# we got the maximum value for chemical PT08.S4.NO2. which is 2775 
+which(categorical$PT08.S4.NO2.==2775)   # It gives the row index of highest value
+aq[5521,]
+
+# So the most polluted time of the day is evening 6 pm on 26 Oct 2014 and the chemical compound is PT08.S4.NO2.
 
